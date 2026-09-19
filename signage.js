@@ -1,0 +1,60 @@
+'use strict';
+(() => {
+  const deals = [
+    ['CLASSIC<br>SMASH BURGER','FRIES + CAN OF POP','10.99'],
+    ['DONAIR<br>SMASH BURGER','FRIES + CAN OF POP','11.99'],
+    ['GAME CHANGER<br>BEEF POUTINE','+ CAN OF POP','13.99'],
+    ['WESTERN<br>BEEF POUTINE','+ CAN OF POP','13.99'],
+    ['SPICY CHICKEN<br>POUTINE','+ CAN OF POP','15.99'],
+    ['ALBERTA<br>CLASSIC BEEF','FRIES + CAN OF POP','13.99'],
+    ['SWEET &amp; SPICY<br>BEEF','FRIES + CAN OF POP','13.99'],
+    ['HONEY GARLIC<br>CHICKEN','FRIES + CAN OF POP','15.99'],
+    ['TASTY THAI<br>RICE BOX','BEEF + CAN OF POP','12.99'],
+    ['CARIBBEAN<br>RICE BOX','CHICKEN OR MIX + CAN OF POP','14.99']
+  ];
+  const ENTRANCE_MS=650, STAGGER_MS=1400, HOLD_MS=8000;
+  const section=document.querySelector('.deals');
+  const slots=Array.from({length:5},()=>section.appendChild(Object.assign(document.createElement('div'),{className:'slot'})));
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function resize(){document.documentElement.style.setProperty('--scale',Math.min(innerWidth/1080,innerHeight/1920));}
+  resize(); addEventListener('resize',resize,{passive:true});
+  function card(index){
+    const [name,inclusion,price]=deals[index];
+    const el=document.createElement('article');el.className='card';el.dataset.deal=String(index+1);
+    el.innerHTML=`<span class="number">${index+1}</span><img class="food" src="deal-${index+1}.png" alt="${name.replace(/<br>/g,' ')} with included drink${inclusion.includes('FRIES')?' and fries':''}" width="320" height="180"><div class="info"><h2 class="name">${name}</h2><p class="inclusion"${index===9?' style="font-size:23px"':''}>${inclusion}</p><p class="price">$${price}</p></div>`;
+    return el;
+  }
+  // A real deal is present from the first rendered frame; never a title-only intro.
+  slots[0].append(card(0));
+  if(slots[0].firstElementChild.animate) slots[0].firstElementChild.animate(
+    [{opacity:.3,transform:reduced?'none':'translateX(55px)'},{opacity:1,transform:'translateX(0)'}],
+    {duration:ENTRANCE_MS,easing:'cubic-bezier(.22,.7,.25,1)'});
+
+  // Keep decoded local assets in memory for all-day, network-independent playback.
+  const images=deals.map((_,i)=>{const image=new Image();image.src=`deal-${i+1}.png`;return image;});
+  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  async function enter(slot,index){
+    const previous=slot.firstElementChild;const next=card(index);slot.append(next);
+    if(next.animate){
+      const animation=next.animate([{opacity:0,transform:reduced?'none':'translateX(55px)'},{opacity:1,transform:'translateX(0)'}],{duration:ENTRANCE_MS,easing:'cubic-bezier(.22,.7,.25,1)',fill:'both'});
+      await animation.finished;
+      if(previous)previous.remove();animation.cancel();
+    }else if(previous)previous.remove();
+  }
+  async function play(){
+    await Promise.all(images.map(img=>img.decode?img.decode().catch(()=>{}):Promise.resolve()));
+    // Initial sequence: card 1 is already readable while each later card arrives.
+    for(let row=1;row<5;row++){await pause(STAGGER_MS-(row===1?0:ENTRANCE_MS));await enter(slots[row],row);}
+    await pause(HOLD_MS);
+    let group=1;
+    for(;;){
+      // Replace rows one at a time over the previous group: no empty group transition.
+      for(let row=0;row<5;row++){
+        if(row)await pause(STAGGER_MS-ENTRANCE_MS);
+        await enter(slots[row],group*5+row);
+      }
+      await pause(HOLD_MS);group=1-group;
+    }
+  }
+  play();
+})();
