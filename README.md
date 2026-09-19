@@ -8,7 +8,7 @@ TV URL: https://sachin-0925.github.io/Meal-Deal-2/
 
 Open the URL in a fullscreen browser on a portrait display. Native layout: 1080 × 1920. Smaller or differently shaped browser windows scale the entire portrait composition proportionally. No interaction is needed after opening. Keep the TV/browser awake using its own display or kiosk settings.
 
-Five rows show deals 1–5, then 6–10. Entrances start 1.4 seconds apart, animate for 650 milliseconds, and the completed group holds for 8 seconds. During group changes, incoming rows replace outgoing rows individually so the screen never empties. The header and footer stay fixed. Reduced-motion preferences use a fade without sliding.
+Five rows show deals 1–5, then 6–10. Entrances start 1.4 seconds apart, animate for 650 milliseconds, and the completed group holds for 8 seconds. All five rows fade out together over 650 milliseconds, followed by a completely empty deal area for 1 second before the next group starts. Groups never mix. The first group also starts with an empty deal area for 1 second. The plain bold text header and footer stay fixed and visible, including during empty transitions. Reduced-motion preferences use a fade without sliding.
 
 All imagery and the open-source Anton font are bundled locally. Food artwork is cropped from the approved Hollick Kenyon poster; only surrounding background and poster-border fragments were removed. No generated or substituted food imagery. The source poster's limited resolution determines the image detail.
 
